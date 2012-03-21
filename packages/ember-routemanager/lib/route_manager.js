@@ -170,7 +170,7 @@ Ember.RouteManager = Ember.StateManager.extend({
         encodedValue = encodeURI(value);
 
         if(this.usesHistory) {
-          if(encodedValue.length > 0) {
+          if(encodedValue.length > 0 && encodedValue.charAt(0) !== '/') {
             encodedValue = '/' + encodedValue;
           }
           window.history.pushState(null, null, get(this, 'baseURI') + encodedValue);
@@ -541,12 +541,15 @@ Ember.RouteManager = Ember.StateManager.extend({
   },
 
   popState: function(event) {
-    var routes = this;
+    var routes = this, delta = 0;
     var base = get(routes, 'baseURI'), loc = (base.charAt(0) === '/') ? document.location.pathname : document.location.href;
 
     if(loc.slice(0, base.length) === base) {
-      // Remove the base prefix and the extra '/'
-      loc = loc.slice(base.length + 1, loc.length);
+      // Remove the base prefix and closing '/' if present
+      if (base.length > 0 && base.charAt(base.length - 1) === '/') {
+        delta = 1;
+      }
+      loc = loc.slice(base.length + delta, loc.length);
 
       if(get(routes, 'location') !== loc && !routes._skipRoute) {
         Ember.run.once(function() {
